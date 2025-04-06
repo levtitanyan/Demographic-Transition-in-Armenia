@@ -1,0 +1,385 @@
+---
+title: "death_rate_prep"
+author: "Edelweiss Gevorgyan"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+```{r}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(cowplot)
+library(patchwork)
+library(dplyr)
+library(ggrepel)
+library(tidyverse)
+library(gridExtra)
+library(grid)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+
+```
+
+
+
+Preparation for Age_Gender_2023 Data
+
+```{r age_gender_2023}
+age_gender <- read_excel("../Data/age-gender.xlsx", skip = 4)
+
+
+
+
+
+colnames(age_gender) <- c("Age", "Male_2011", "Female_2011", "Total_2011", 
+                          "Male_2012", "Female_2012", "Total_2012", 
+                          "Male_2013", "Female_2013", "Total_2013", 
+                          "Male_2014", "Female_2014", "Total_2014", 
+                          "Male_2015", "Female_2015", "Total_2015", 
+                          "Male_2016", "Female_2016", "Total_2016", 
+                          "Male_2017", "Female_2017", "Total_2017", 
+                          "Male_2018", "Female_2018", "Total_2018", 
+                          "Male_2019", "Female_2019", "Total_2019", 
+                          "Male_2020", "Female_2020", "Total_2020", 
+                          "Male_2021", "Female_2021", "Total_2021", 
+                          "Male_2022", "Female_2022", "Total_2022", 
+                          "Male_2023", "Female_2023", "Total_2023")
+
+age_gender_2023 <- age_gender %>%
+  slice(-1) %>%
+  select(Age, Male_2023, Female_2023, Total_2023)
+
+head(age_gender_2023)
+```
+
+```{r}
+getwd()
+```
+
+Armenia death rate data
+```{r death_data}
+data <- read.csv("../Data/death_Armenia.csv", skip = 8, stringsAsFactors = FALSE)
+data$Year <- as.numeric(substr(data$Date, 1, 4))
+data <- data[data$Year <= 2024, ]
+data <- data[ , !names(data) %in% "Annual...Change"]
+names(data) <- c("Date", "Death Rate", "Annual Change", "Year")
+
+death_data <- data
+head(death_data)
+```
+
+
+Death Rate Data for Azerbaijan 
+
+```{r death_data_az}
+data_azerbaijan <- read.csv("../Data/death_Azerbaijan.csv", skip = 8, stringsAsFactors = FALSE)
+
+data_azerbaijan$Year <- as.numeric(substr(data_azerbaijan$Date, 1, 4))
+
+data_azerbaijan <- data_azerbaijan[data_azerbaijan$Year <= 2024, ]
+
+data_azerbaijan <- data_azerbaijan[ , !names(data_azerbaijan) %in% "Annual...Change"]
+
+names(data_azerbaijan) <- c("Date", "Death Rate", "Annual Change", "Year")
+
+death_data_az <- data_azerbaijan
+```
+
+Death Rate Data for Georgia 
+
+```{r death_data_ge}
+data_georgia <- read.csv("../Data/death_Georgia.csv", skip = 8, stringsAsFactors = FALSE)
+data_georgia$Year <- as.numeric(substr(data_georgia$Date, 1, 4))
+data_georgia <- data_georgia[data_georgia$Year <= 2024, ]
+data_georgia <- data_georgia[ , !names(data_georgia) %in% "Annual...Change"]
+names(data_georgia) <- c("Date", "Death Rate", "Annual Change", "Year")
+death_data_ge <- data_georgia
+```
+
+Heathcare Spending in ARmenia in USD 
+
+```{r data_armenia_healthcare}
+data_armenia_healthcare <- read.csv("../Data/armenia-healthcare-spending.csv", skip = 8, stringsAsFactors = FALSE)
+data_armenia_healthcare$Year <- as.numeric(substr(data_armenia_healthcare$Date, 1, 4))
+data_armenia_healthcare <- data_armenia_healthcare[data_armenia_healthcare$Year <= 2024, ]
+data_armenia_healthcare <- data_armenia_healthcare[ , !names(data_armenia_healthcare) %in% "Annual Change"]
+names(data_armenia_healthcare) <- c("Date", "Per Capita (US $)", "% of GDP", "Year")
+data_armenia_healthcare$Year <- as.numeric(data_armenia_healthcare$Year)
+data_armenia_healthcare$`Per Capita (US $)` <- as.numeric(data_armenia_healthcare$`Per Capita (US $)`)
+data_armenia_healthcare$`% of GDP` <- as.numeric(data_armenia_healthcare$`% of GDP`)
+data_armenia_healthcare <- data_armenia_healthcare[, c("Date", "Year", "Per Capita (US $)", "% of GDP")]
+data_armenia_healthcare$Year <- format(as.Date(data_armenia_healthcare$Date), "%Y")
+data_armenia_healthcare$Year <- as.numeric(data_armenia_healthcare$Year)
+
+```
+
+
+
+Infant Mortality Rate 
+
+```{r infant_mortality_data}
+data_infant_mortality <- read.csv("../Data/infant_mortality.csv", skip = 8, stringsAsFactors = FALSE)
+data_infant_mortality$Date <- as.Date(data_infant_mortality$Date, format = "%Y-%m-%d")
+data_infant_mortality$Year <- as.numeric(format(data_infant_mortality$Date, "%Y"))
+data_infant_mortality <- data_infant_mortality[data_infant_mortality$Year <= 2024, ]
+data_infant_mortality <- data_infant_mortality[, !names(data_infant_mortality) %in% "Annual % Change"]
+names(data_infant_mortality) <- c("Date", "Death per 1000 Live Births", "Annual % Change", "Year")
+data_infant_mortality$`Death per 1000 Live Births` <- as.numeric(data_infant_mortality$`Death per 1000 Live Births`)
+data_infant_mortality$`Annual % Change` <- as.numeric(data_infant_mortality$`Annual % Change`)
+data_infant_mortality <- data_infant_mortality[, c("Date", "Year", "Death per 1000 Live Births", "Annual % Change")]
+data_infant_mortality$Year <- format(as.Date(data_infant_mortality$Date), "%Y")
+data_infant_mortality$Year <- as.numeric(data_infant_mortality$Year)
+data_infant_mortality <- data_infant_mortality[data_infant_mortality$Year <= 2024, ]
+infant_mortality_data <- data_infant_mortality
+```
+
+
+
+Data for Pyramid 2023 for AGe and Gender Distribution
+```{r age_gender_data_2023}
+age_gender_data_2023 <- age_gender_2023 %>%
+  filter(Age != "Total") %>%
+  mutate(Age = suppressWarnings(as.numeric(Age))) %>%
+  filter(!is.na(Age)) %>%
+  mutate(AgeGroup = cut(Age, 
+                        breaks = seq(0, 100, by = 5), 
+                        right = FALSE, 
+                        labels = paste(seq(0, 95, by = 5), seq(4, 99, by = 5), sep = "-"))) %>%
+  group_by(AgeGroup) %>%
+  summarise(Male = sum(Male_2023, na.rm = TRUE), 
+            Female = sum(Female_2023, na.rm = TRUE), 
+            .groups = 'drop') %>%
+  pivot_longer(cols = c(Male, Female), names_to = "Gender", values_to = "Population") %>%
+  mutate(Population = ifelse(Gender == "Male", -Population, Population))
+
+```
+
+Age-Gender Pyramid Plot
+
+```{r}
+pyramid_2023 <- ggplot(age_gender_data_2023, aes(x = AgeGroup, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = abs(Population)), position = position_stack(vjust = 0.5), size = 3) +
+  coord_flip() +
+  scale_y_continuous(labels = abs) +
+  scale_fill_manual(values = c("Male" = "lightblue", "Female" = "pink")) +
+  labs(title = "Population Pyramid of Armenia (2023)",
+       x = "Age Group",
+       y = "Population") +
+  theme_classic() +
+  theme(legend.title = element_blank())
+
+```
+
+
+Line Graph for Death Rate in Armenia
+
+```{r death_rate_plot}
+death_rate_plot <- ggplot(death_data, aes(x = Year, y = `Death Rate`)) +
+  geom_line() +
+  labs(title = "Death Rate in Armenia Over Time", 
+       x = "Year", 
+       y = "Death Rate") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        legend.position = "none")
+
+
+death_annual_change_plot <- ggplot(death_data, aes(x = Year, y = `Annual Change`)) +
+  geom_line() +
+  labs(title = "Annual Change in Death Rate in Armenia Over Time", 
+       x = "Year", 
+       y = "Annual Change (%)") +
+  theme_minimal()
+
+grid.arrange(death_rate_plot, death_annual_change_plot, ncol = 1)
+```
+
+```{r}
+colnames(death_data)
+```
+
+```{r}
+death_rate_plot_events <- ggplot(death_data, aes(x = Year, y = `Death Rate`)) +
+  geom_line() +
+  geom_vline(xintercept = c(1950, 1973), color = "green", linetype = "dashed") + 
+  
+  geom_point(aes(color = "Widespread Vaccination"),
+             data = death_data %>% filter(Year == 1960), 
+             size = 3) +
+  geom_vline(xintercept = c(1975, 1995), color = "red", linetype = "dashed") + 
+
+  geom_point(aes(color = "Spitak Earthquake"),
+             data = death_data %>% filter(Year == 1988), 
+             size = 3) +  # Spitak Earthquake
+  geom_point(aes(color = "1991, Collapse of USSR"),
+             data = death_data %>% filter(Year == 1991), 
+             size = 3) +  # Collapse of the Soviet Union
+  geom_point(aes(color = "1994, End of Nagorno-Karabakh War"),
+             data = death_data %>% filter(Year == 1994), 
+             size = 3) +  # Artsakh War
+  geom_vline(xintercept = c(2003, 2008), color = "orange", linetype = "dashed") + 
+
+  geom_point(aes(color = "Economic Crisis"),
+             data = death_data %>% filter(Year == 2008), 
+             size = 3) +
+
+
+
+  labs(title = "Death Rate in Armenia Over Time", 
+       x = "Year", 
+       y = "Death Rate") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank(),
+        legend.position = "bottom",
+        legend.title =  element_blank(),
+        legend.text = element_text(size = 6))
+
+death_rate_plot_events
+```
+
+Combining data for comp. graph
+
+```{r data_combined_south_caucasus}
+death_data$Country <- "Armenia"
+data_azerbaijan$Country <- "Azerbaijan"
+data_georgia$Country <- "Georgia"
+
+data_combined_south_caucasus <- bind_rows(death_data, data_azerbaijan, data_georgia)
+colnames(data_combined_south_caucasus)
+```
+Plot for comparing Arm, Ge, Az death rates
+
+```{r death_rate_caucasus_plot}
+death_rate_caucasus_plot <- ggplot(data_combined_south_caucasus, aes(x = Year, y = `Death Rate`, color = Country)) +
+  geom_line() +
+  labs(title = "Death Rates in South Caucasus (Armenia, Azerbaijan, Georgia)", 
+       x = "Year", 
+       y = "Death Rate") +
+  theme_minimal()
+```
+
+
+
+Data for Death causes in Armenia
+```{r death_causes_data}
+data_causes <- read.csv("../Data/death_causes.csv", stringsAsFactors = FALSE)
+
+data_causes$Year <- as.numeric(data_causes$Year)
+data_causes$Value <- as.numeric(data_causes$Value)
+
+death_causes_data <- data_causes %>%
+  filter(!is.na(Year), !is.na(Value)) %>%
+  select(Year, Category, Value)
+```
+
+Stacked Bar Chart of Death Causes in Armenia
+```{r death_causes_plot}
+death_causes_plot <- ggplot(data_causes, aes(x = Year, y = Value, fill = Category)) +
+  geom_bar(stat = "identity", position = "stack") +
+    scale_fill_brewer(palette = "Set1") +
+  labs(
+    title = "Causes of Death in Armenia Over Time",
+    x = "Year",
+    y = "Deaths per 100,000 Population",
+    fill = "Cause"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+head(death_data)
+```
+```{r}
+head(data_armenia_healthcare)
+```
+
+
+Merging data for Healthcare VS Death Rate
+```{r merged_data_hd}
+merged_data_hd <- merge(death_data, data_armenia_healthcare, by = "Year")
+colnames(merged_data_hd) <- c("Year", "Date_death", "Death_Rate", "Annual_Change", "Date_healthcare", "Date_health", "Per_Capita_USD", "GDP_Percentage")
+head(merged_data_hd)
+```
+
+
+Plot for Healthcare Spending VS Death Rate
+
+```{r health_death_plot}
+health_death_plot <- ggplot(merged_data_hd, aes(x = Per_Capita_USD, y = Death_Rate, color = Year)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  xlab("Healthcare Spending Per Capita (USD)") +
+  ylab("Death Rate") +
+  ggtitle("Relationship Between Healthcare Spending and Death Rate") +
+  scale_color_gradient(low = "green", high = "black") +
+  theme_minimal()
+```
+
+```{r}
+health_death_plot
+```
+
+Infant Mortality Rate Over Time and Annual Change
+
+```{r IMR_plot}
+plot_IMR_change <- ggplot(infant_mortality_data, aes(x = Year, y = `Death per 1000 Live Births`)) +
+  geom_line() +
+  ggtitle("Infant Mortality Rate over Time") +
+  xlab("Year") +
+  ylab("IMR (Deaths per 1000 Live Births)") +
+  theme_minimal() +
+  theme(axis.title.x = element_blank())
+
+
+plot_IMR_pc <- ggplot(infant_mortality_data, aes(x = Year, y = `Annual % Change`)) +
+  geom_line() +
+  ggtitle("Annual % Change in IMR") +
+  xlab("Year") +
+  ylab("Annual % Change") +
+  theme_minimal()
+
+#grid.arrange(plot_IMR_change, plot_IMR_pc, ncol = 1)
+```
+
+
+
+
+
+
+```{r}
+save(
+  pyramid_2023, death_rate_plot,
+  death_annual_change_plot, death_rate_caucasus_plot,
+  death_causes_plot, health_death_plot,
+  plot_IMR_change, plot_IMR_pc,
+  death_rate_plot_events, age_gender_data_2023,
+  
+  file = "../Rdata_saved/death_rate_analysis.RData"
+)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

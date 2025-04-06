@@ -1,0 +1,811 @@
+---
+title: "Data Preparation"
+author: "Levon Titanyan"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+
+```
+
+```{r libraries}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(cowplot)
+library(patchwork)
+library(dplyr)
+library(ggrepel)
+library(tidyverse)
+library(gridExtra)
+library(grid)
+```
+This file contains data preparation of Fertility rate part.
+
+
+
+
+
+
+
+*Birth Rate*
+
+
+
+
+Armenia Azerbaijan Georgia Data
+```{r arm_az_geo_data}
+# Creating dataset of birth rates in Armenia, Georgia, Azerbaijan
+process_birth_data <- function(file_path, country_name) {
+  data <- read_csv(file_path, skip = 8) %>%  
+    rename(
+      Date = `Date`,  
+      BirthRate = `GDP (Billions of US $)`
+    ) %>%
+    mutate(
+      Date = as.Date(Date, format = "%Y-%m-%d"),
+      BirthRate = as.numeric(BirthRate),
+      Year = as.numeric(format(Date, "%Y"))
+    ) %>%
+    filter(Year <= 2023) %>%  # Include only years up to 2023
+    select(Year, BirthRate) %>%
+    rename(!!country_name := BirthRate)
+  
+  return(data)
+}
+
+armenia_data <- process_birth_data("../Data/Armenia_Birth.csv", "Armenia_BR")
+georgia_data <- process_birth_data("../Data/Georgia_Birth.csv", "Georgia_BR")
+azerbaijan_data <- process_birth_data("../Data/Azerbaijan_Birth.csv", "Azerbaijan_BR")
+
+# Combined dataset
+arm_az_geo_data <- reduce(list(armenia_data, georgia_data, azerbaijan_data), left_join, by = "Year")
+  
+# Step 4: View the combined data
+# print(Birth_data)
+
+```
+
+Plot of Armenia, Azerbaijan, Georgia
+```{r arm_az_geo_plot_data}
+# Creating the Plot for Birth Rates in Armenia, Georgia, and Azerbaijan
+arm_az_geo_plot <- ggplot(arm_az_geo_data, aes(x = Year)) +
+  geom_line(aes(y = Armenia_BR, color = "Armenia")) +
+  geom_line(aes(y = Georgia_BR, color = "Georgia")) +
+  geom_line(aes(y = Azerbaijan_BR, color = "Azerbaijan")) +
+  
+  labs(
+    title = "Birth Rates in Southern Caucasus",
+    subtitle = "Comparing Armenia, Georgia, and Azerbaijan",
+    x = "",
+    y = "Birth Rate",
+    color = "Country"
+  ) +
+    scale_x_continuous(breaks = seq(1950, 2023, by = 5)) +
+    scale_y_continuous(breaks = seq(5, 50, by = 5)) +
+  theme_bw() +
+  
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "top",
+    legend.title = element_text(face = "bold")
+  ) +
+  # Scale for colors
+  scale_color_manual(values = c("Armenia" = "darkblue", "Georgia" = "darkgreen",
+                                "Azerbaijan" = "darkred"))
+```
+
+
+
+Armenia's birth rate with its Percentage Change
+```{r armenia_data_percentage}
+# creating dataset of Armenia's birth rate and its percentage change
+
+armenia_birth_data_percentage <- read_csv("../Data/Armenia_Birth.csv", skip = 8)
+colnames(armenia_birth_data_percentage) <- c("Date", "Armenia_BR", "Per_Capita_USD", "Annual_Percent_Change")
+
+
+armenia_birth_data_percentage <- armenia_birth_data_percentage %>%
+  mutate(
+    Date = as.Date(Date, format = "%Y-%m-%d"),
+    Armenia_BR = as.numeric(Armenia_BR),  
+    Change_Percent = as.numeric(Per_Capita_USD),  
+    Year = as.numeric(format(Date, "%Y"))
+  ) %>%
+  filter(Year <= 2023) %>%  
+  select(Year, Armenia_BR, Change_Percent)
+# print(armenia_birth_data_percentage)
+```
+
+
+
+Birth Rate Plot
+```{r birth_rate_plot_data}
+# First Graph: Birth Rate Over Time
+birth_rate_plot <- ggplot(armenia_data_percentage, aes(x = Year, y = Armenia_BR)) +
+  geom_line(color = "black", size = 1) +
+  labs(
+    x = element_blank(),  
+    y = "Birth Rate") +
+  
+  scale_x_continuous(breaks = seq(1950, 2023, by = 5)) +
+  scale_y_continuous(breaks = seq(10, 40, by = 5)) +
+  
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 12),
+    axis.title.x = element_text(size = 12, vjust = 1.5),  
+    axis.text.x = element_blank()) +
+  
+  labs(
+    title = "Birth Rate and Its Change",
+    subtitle = "Armenia (1950 - 2023)") +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5))
+
+# Second Graph: Change Percent Over Time
+change_percent_plot <- ggplot(armenia_data_percentage, aes(x = Year, y = Change_Percent)) +
+  geom_line(color = "black", size = 1) +
+  labs(
+    x = element_blank(),  
+    y = "Change (%)") +
+  scale_x_continuous(breaks = seq(1950, 2023, by = 5)) +
+  scale_y_continuous(breaks = seq(-8, 4, by = 2)) +
+  theme_classic() +
+  theme(
+    axis.title.y = element_text(size = 12),
+    axis.text = element_text(size = 10))
+
+# grid.arrange(birth_rate_plot,change_percent_plot, ncol = 1)
+
+
+
+
+```
+
+
+```{r birth_rate_plot_1_data}
+# 1950-1960 Period with significant dates/events
+
+# Birth rate
+birth_rate_plot_1 <- ggplot(armenia_data_percentage, aes(x = Year, y = Armenia_BR)) +
+  geom_line(color = "black", size = 1) +
+  
+  geom_rect(aes(xmin = 1950, xmax = 1960, ymin = -Inf, ymax = Inf),
+            fill = "lightgreen", alpha = 0.02, inherit.aes = FALSE) +
+  
+  geom_point(aes(color = "1955, Maternity Leave benefits"), 
+             data = armenia_data_percentage %>% filter(Year == 1955),
+             size = 3) +
+  
+  scale_color_manual(values = c("1955, Maternity Leave benefits" = "darkblue")) +
+  
+  labs(
+    x = element_blank(),
+    y = "Birth Rate",
+    color = ""  
+  ) +
+  scale_x_continuous(breaks = seq(1950, 2023, by = 5)) +
+  scale_y_continuous(breaks = seq(10, 40, by = 5)) +
+  theme_minimal() +
+  theme(
+    axis.title = element_text(size = 12),
+    axis.title.x = element_text(size = 12, vjust = 1.5),
+    axis.text.x = element_blank()) +
+    
+  annotate("text", x = 1955, y = 17,
+           label = "Postwar Era", color = "black", fontface = "bold",
+           size = 2.7, alpha=0.7) +
+  labs(
+    title = "Birth Rate and Its Change",
+    subtitle = "Armenia (1950 - 2023)"
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5),
+    legend.position = "none"  # Move legend to the top
+  )
+
+
+# Change in %
+change_percent_plot_1 <- ggplot(armenia_data_percentage, aes(x = Year, y = Change_Percent)) +
+  geom_line(color = "black", size = 1) +
+  
+  geom_rect(aes(xmin = 1950, xmax = 1960, ymin = -Inf, ymax = Inf),
+            fill = "lightgreen", alpha = 0.02, inherit.aes = FALSE) +
+
+  
+  geom_point(aes(color = "1955, Maternity Leave benefits"), 
+             data = armenia_data_percentage %>% filter(Year == 1955),
+             size = 3) +
+  
+  scale_color_manual(values = c("1955, Maternity Leave benefits" = "darkblue")) +
+  
+  labs(
+    x = "Year",
+    y = "Change (%)",
+    color = ""  
+  ) +
+  scale_x_continuous(breaks = seq(1950, 2023, by = 5)) +
+  scale_y_continuous(breaks = seq(-8, 4, by = 2)) +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    axis.title.x = element_blank(),
+    legend.position = "top"  
+  )
+
+```
+
+
+
+```{r birth_rate_plot_2_data}
+#1960-1969 Period with significant dates/events
+
+# Birth Rate
+birth_rate_plot_2 <- birth_rate_plot_1 +  
+  geom_rect(aes(xmin = 1960, xmax = 1969, ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.02, inherit.aes = FALSE) +
+  geom_point(aes(color = "1968, Restriction on divorce"),
+             data = armenia_data_percentage %>% filter(Year == 1968), size = 3) +
+  scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2"
+  )) +
+  annotate("text", x = 1965, y = 17, 
+           label = "Divorce\nliberalization", 
+           color = "black", fontface = "bold", 
+           size = 2.7, alpha = 0.7, vjust = 0.5)
+
+# Percentage Change
+change_percent_plot_2 <- change_percent_plot_1 +  
+  geom_rect(aes(xmin = 1960, xmax = 1969, ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.02, inherit.aes = FALSE) +
+  geom_point(aes(color = "1968, Restriction on divorce"),
+             data = armenia_data_percentage %>% filter(Year == 1968), size = 3) +
+  scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2"
+  ))
+
+
+```
+
+
+
+```{r birth_rate_plot_3_data}
+#1969-1988 Period with significant dates/events
+
+# Birth rate
+birth_rate_plot_3 <- birth_rate_plot_2 +
+
+  geom_rect(aes(xmin = 1969, xmax = 1988, ymin = -Inf, ymax = Inf),
+            fill = "gold", alpha = 0.02, inherit.aes = FALSE) +
+  
+    geom_point(aes(color = "1969, Marriage Equality Reforms"), 
+             data = armenia_data_percentage %>% filter(Year == 1969),
+             size = 3) +
+  
+    geom_point(aes(color = "1974, Support of Poor Families"), 
+             data = armenia_data_percentage %>% filter(Year == 1974),
+             size = 3) +
+    scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2",
+    "1969, Marriage Equality Reforms" = "darkgreen",
+    "1974, Support of Poor Families" = "purple")) +
+  annotate("text", x = 1979, y = 17, 
+           label = "Social Reforms", 
+           color = "black", fontface = "bold", 
+           size = 2.7, alpha = 0.7, vjust = 0.5)
+  
+
+# Change(%)
+change_percent_plot_3 <- change_percent_plot_2 +
+  geom_rect(aes(xmin = 1969, xmax = 1988, ymin = -Inf, ymax = Inf),
+            fill = "gold", alpha = 0.02, inherit.aes = FALSE) +
+  
+    geom_point(aes(color = "1969, Marriage Equality Reforms"), 
+             data = armenia_data_percentage %>% filter(Year == 1969),
+             size = 3) +
+  
+    geom_point(aes(color = "1974, Support of Poor Families"), 
+             data = armenia_data_percentage %>% filter(Year == 1974),
+             size = 3) +
+  
+    scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2",
+    "1969, Marriage Equality Reforms" = "darkgreen",
+    "1974, Support of Poor Families" = "purple")) +
+  
+    theme(
+    legend.position = "top",
+    legend.title = element_blank(),       # Removes the legend title
+    legend.text = element_text(size = 7), # Adjusts legend text size
+    legend.key.size = unit(0.5, "cm")     # Adjusts the size of legend keys
+)
+```
+
+
+```{r birth_rate_plot_4_data}
+# 1988 to 2000 Period with significant dates/events
+
+# Birth rate
+birth_rate_plot_4 <- birth_rate_plot_3 +
+  geom_rect(aes(xmin = 1988, xmax = 2000, ymin = -Inf, ymax = Inf),
+            fill = "firebrick1", alpha = 0.02, inherit.aes = FALSE) +
+  
+  geom_point(data = armenia_data_percentage %>% filter(Year == 1991),
+             aes(color = "1991, USSR Collapse"),
+             size = 3) +  
+  
+  geom_point(data = armenia_data_percentage %>% filter(Year == 1988),
+             aes(color = "1988, Spitak Earthquake"),
+             size = 3) +  
+    
+  
+  scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2",
+    "1969, Marriage Equality Reforms" = "darkgreen",
+    "1974, Support of Poor Families" = "purple",
+    "1988, Spitak Earthquake" = "black",
+    "1991, USSR Collapse" = "darkgrey")) +
+  
+  annotate("text", x = 1994, y = 17, 
+           label = "Collapse, War", 
+           color = "black", fontface = "bold", 
+           size = 2.7, alpha = 0.7, vjust = -6) 
+
+
+# Change (%)
+change_percent_plot_4 <- change_percent_plot_3 +
+  geom_rect(aes(xmin = 1988, xmax = 2000, ymin = -Inf, ymax = Inf),
+            fill = "firebrick1", alpha = 0.02, inherit.aes = FALSE) +
+  
+  geom_point(data = armenia_data_percentage %>% filter(Year == 1991),
+             aes(color = "1991, USSR Collapse"),
+             size = 3) +  
+  
+  geom_point(data = armenia_data_percentage %>% filter(Year == 1988),
+             aes(color = "1988, Spitak Earthquake"),
+             size = 3) +
+  
+      scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2",
+    "1969, Marriage Equality Reforms" = "darkgreen",
+    "1974, Support of Poor Families" = "purple",
+    "1988, Spitak Earthquake" = "black",
+    "1991, USSR Collapse" = "darkgrey"))
+
+```
+
+```{r birth_rate_plot_5_data}
+# 2000 - 20203 Period with significant dates/events
+
+# Birth rate
+birth_rate_plot_5 <- birth_rate_plot_4 +
+  
+  geom_rect(aes(xmin = 2000, xmax = 2023, ymin = -Inf, ymax = Inf),
+            fill = "khaki", alpha = 0.02, inherit.aes = FALSE) +
+  
+
+
+  annotate("text", x = 2012, y = 17, 
+           label = "Global Crises and Pandemic", 
+           color = "black", fontface = "bold", size = 2.7, alpha = 0.7, vjust = -6) +
+  
+    geom_point(data = armenia_data_percentage %>% filter(Year == 2008),
+             aes(color = "2008, Economic Crisis"),
+             size = 3) +
+  
+    geom_point(data = armenia_data_percentage %>% filter(Year == 2020),
+             aes(color = "2020, COVID-19,War"),
+             size = 3) +
+  
+  scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2",
+    "1969, Marriage Equality Reforms" = "darkgreen",
+    "1974, Support of Poor Families" = "purple",
+    "1988, Spitak Earthquake" = "black",
+    "1991, USSR Collapse" = "darkgrey",
+    "2008, Economic Crisis" = "darkred",
+    "2020, COVID-19,War" = "pink3")) 
+
+# Change Percentage Plot: 2008-2020
+change_percent_plot_5 <- change_percent_plot_4 +
+  # Highlight the region from 2008 to 2020
+  geom_rect(aes(xmin = 2000, xmax = 2023, ymin = -Inf, ymax = Inf),
+            fill = "khaki", alpha = 0.02, inherit.aes = FALSE) +
+  
+  geom_point(data = armenia_data_percentage %>% filter(Year == 2008),
+             aes(color = "2008, Economic Crisis"),
+             size = 3) +
+  
+    geom_point(data = armenia_data_percentage %>% filter(Year == 2020),
+             aes(color = "2020, COVID-19,War"),
+             size = 3) +
+  
+
+  
+  scale_color_manual(values = c(
+    "1955, Maternity Leave benefits" = "darkblue",
+    "1968, Restriction on divorce" = "gold2",
+    "1969, Marriage Equality Reforms" = "darkgreen",
+    "1974, Support of Poor Families" = "purple",
+    "1988, Spitak Earthquake" = "black",
+    "1991, USSR Collapse" = "darkgrey",
+    "2008, Economic Crisis" = "darkred",
+    "2020, COVID-19,War" = "pink3")) 
+
+```
+
+
+1988 Earthquake 1991 Collapse, 1988-1994 War
+```{r armenia_1985_2000_plots}
+# Impact of 1988 Earthquake 1991 Collapse, 1988-1994 War on birth rate
+
+
+# Filter the data for the years 1985 to 2000
+armenia_1985_2000 <- armenia_data_percentage %>%
+  filter(Year >= 1985 & Year <= 2000)
+
+armenia_1985_2000 <- armenia_1985_2000 %>%
+  mutate(
+    Event = case_when(
+      Year == 1988 ~ "1988 Spitak Earthquake, Beginning of Artsakh War",
+      Year == 1991 ~ "1991 USSR Collapse",
+      Year == 1994 ~ "1994 End of Artsakh War",
+      TRUE ~ "Other Years"))
+
+armenia_1985_2000$Year <- factor(armenia_1985_2000$Year, levels = armenia_1985_2000$Year)
+
+# Colors
+event_colors <- c(
+  "1988 Spitak Earthquake, Beginning of Artsakh War" = "red",
+  "1991 USSR Collapse" = "darkred",
+  "1994 End of Artsakh War" = "orange",
+  "Other Years" = "steelblue"
+)
+```
+
+
+```{r armenia_1985_2000_data_plots}
+# Circular Barplot for 1985-2000 Birth Rate
+circular_barplot <- ggplot(armenia_1985_2000, aes(x = Year, y = Armenia_BR, fill = Event)) +
+  geom_bar(stat = "identity", color = "black", width = 0.8) +
+  coord_polar(start = 0) +
+  scale_fill_manual(values = event_colors) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 10, face = "bold"),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_blank(),
+    plot.subtitle = element_blank(),
+    legend.position = "none")
+
+# Faceted Bar Chart for 1985-2000 Birth Rate
+faceted_bar_chart <- ggplot(armenia_1985_2000, aes(x = Year, y = Armenia_BR, fill = Event)) +
+  geom_bar(stat = "identity", color = "black") +
+  scale_fill_manual(values = event_colors) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text.x = element_text(angle = 90, vjust = 0.5, face = 'bold'),
+    axis.text.y = element_blank(),
+    plot.title = element_blank(),
+    plot.subtitle = element_blank(),
+    legend.position = "none") +
+  geom_text(
+    aes(label = round(Armenia_BR, 1),
+      color = case_when(Year == 1988 ~ "red",Year == 1991 ~ "darkred",Year == 1994 ~ "orange",
+        TRUE ~ "black")),
+      vjust = -0.5, size = 2.7,fontface = "bold") +
+  scale_color_identity()
+
+```
+
+
+```{r armenia_1985_2000_data_plots_merging}
+# Merging plots together
+desired_events <- c(
+  "1988 Spitak Earthquake, Beginning of Artsakh War",
+  "1991 USSR Collapse",
+  "1994 End of Artsakh War")
+
+event_colors <- c(
+  "1988 Spitak Earthquake, Beginning of Artsakh War" = "red",
+  "1991 USSR Collapse" = "darkred",
+  "1994 End of Artsakh War" = "orange")
+
+
+# Extract the legend from a plot with only the desired events
+legend <- cowplot::get_legend(
+  ggplot(armenia_1985_2000 %>% filter(Event %in% desired_events), 
+         aes(x = Year, y = Armenia_BR, fill = Event)) +
+    geom_bar(stat = "identity") +
+    scale_fill_manual(values = event_colors) +
+    guides(fill = guide_legend(nrow = 1, byrow = TRUE)) +  
+    theme(
+      legend.position = "right",            
+      legend.title = element_blank(),        
+      legend.text = element_text(size = 8)))
+
+legend_plot <- cowplot::plot_grid(NULL,legend,ncol =1)
+
+
+title <- cowplot::ggdraw() + 
+  cowplot::draw_label(
+    "Armenia's Birth Rate (1985 - 2000)",
+    fontface = 'bold', size = 16, x = 0.5, hjust = 0.5)
+
+subtitle <- cowplot::ggdraw() + 
+  cowplot::draw_label(
+    "Highlighting Significant Events",
+    fontface = 'italic', size = 12, x = 0.5, hjust = 0.5)
+
+
+combined_plots <- cowplot::plot_grid(
+  circular_barplot, faceted_bar_chart, labels = NULL,
+  ncol = 2, align = 'v',rel_widths = c(1, 1.4))
+
+
+plot_of_90s <- cowplot::plot_grid(
+  title, subtitle,legend_plot, combined_plots,
+  ncol = 1, rel_heights = c(0.08, 0.05, 0.15, 1))
+# print(plot_of_90s)
+```
+
+
+
+
+
+Marriages and Divorces Data in USSR with Plot
+```{r marrieges_divorce_plot_data}
+# Marriages and Divorces Data
+marriages_divorces_plot <- ggplot(marriages_data, aes(x = Year)) +
+  # USSR
+  geom_line(aes(y = USSR_marriage, color = "USSR - Marriage"), size = 1) +
+  geom_line(aes(y = USSR_divorce, color = "USSR - Divorce"), size = 1) +
+  
+  # USA
+  geom_line(aes(y = USA_marriage, color = "USA - Marriage"), size = 0.7, linetype = "dashed") +
+  geom_line(aes(y = USA_divorce, color = "USA - Divorce"), size = 0.7, linetype = "dashed") +
+  
+  # Japan
+  geom_line(aes(y = Japan_marriage, color = "Japan - Marriage"), size = 0.7, linetype = "dashed") +
+  geom_line(aes(y = Japan_divorce, color = "Japan - Divorce"), size = 0.7, linetype = "dashed") +
+  
+    geom_vline(xintercept = 1968, linetype = 6, color = "purple", size = 0.7) +
+  
+  annotate("text", x = 1968, y = max(marriages_data$USSR_marriage, na.rm = TRUE), 
+           label = "1968    Restriction on Divorce",color = "purple", vjust = 16,hjust=0.22, size=2.7) +
+  
+  
+  labs(
+    title = "Marriages and Divorces Over Time",
+    subtitle = "USSR, USA, and Japan",
+    x = element_blank(),
+    y = element_blank(),
+    color = ""
+  ) +
+
+  scale_color_manual(
+    values = c(
+      "USSR - Marriage" = "darkred",
+      "USSR - Divorce" = "lightcoral",
+      "USA - Marriage" = "darkblue",
+      "USA - Divorce" = "lightblue",
+      "Japan - Marriage" = "gold4",
+      "Japan - Divorce" = "gold"
+    )
+  ) +
+  
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+    plot.subtitle = element_text(size = 10, hjust = 0.5),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom"
+  )
+```
+
+
+
+
+```{r comparison_2000_2023_data}
+germany_data <- process_birth_data("../Data/Germany_Birth.csv", "Germany_BR")
+france_data <- process_birth_data("../Data/France_Birth.csv", "France_BR")
+italy_data <- process_birth_data("../Data/Italy_Birth.csv", "Italy_BR")
+
+
+# Combine datasets for Armenia, Germany, France, and Italy
+combined_birth_data_2000_2023 <- reduce(
+  list(armenia_data, germany_data, france_data, italy_data),
+  left_join, by = "Year"
+)
+
+# Melt data for ggplot
+birth_rate_melted <- combined_birth_data_2000_2023 %>%
+  pivot_longer(
+    cols = c("Armenia_BR", "Germany_BR", "France_BR", "Italy_BR"),
+    names_to = "Country", values_to = "BirthRate"
+  )
+
+# Rename countries for better labels
+birth_rate_melted$Country <- recode(birth_rate_melted$Country,
+                                    "Armenia_BR" = "Armenia",
+                                    "Germany_BR" = "Germany",
+                                    "France_BR" = "France",
+                                    "Italy_BR" = "Italy")
+
+# Filter the data to include only 2000-2023
+birth_rate_melted_filtered <- birth_rate_melted %>%
+  filter(Year >= 2000 & Year <= 2023)
+```
+
+
+```{r comparison_2000_2023_plot_data}
+
+comparison_plot_2000_2023 <- ggplot(birth_rate_melted_filtered, aes(x = Year, y = BirthRate, color = Country)) +
+  geom_line(size = 1) +
+  
+  geom_vline(xintercept = 2008, linetype = "dashed", color = "black", size = 1) +
+  geom_vline(xintercept = 2020, linetype = "dashed", color = "black", size = 1) +
+  
+  annotate("text", x = 2008, y = max(birth_rate_melted_filtered$BirthRate, na.rm = TRUE), 
+           label = "2008", color = "black", size = 3, vjust = -0.3, hjust = 1.5, fontface = 'bold') +
+  annotate("text", x = 2020, y = max(birth_rate_melted_filtered$BirthRate, na.rm = TRUE), 
+           label = "2020", color = "black", size = 3, vjust = -0.3, hjust = 1.5, fontface = 'bold') +
+  
+  labs(
+    title = "Birth Rates Comparison (2000-2023)",
+    subtitle = "Armenia, Germany, France and Italy",
+    x = "",
+    y = "Birth Rate",
+    color = ""
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10),
+    legend.position = "bottom"
+  ) +
+  scale_color_manual(
+    values = c("Armenia" = "gold2", "Germany" = "darkgreen", 
+               "France" = "darkred", "Italy" = "purple"))
+
+comparison_plot_2000_2023
+```
+
+
+
+
+
+Population by Marzes
+```{r population by Marzes}
+# Function to process each sheet and assign it to a variable
+process_and_assign_sheet <- function(sheet_name, file_path = "../Data/age-gender.xlsx") {
+  # Read data from the specific sheet
+  age_gender <- read_xlsx(file_path, sheet = sheet_name, skip = 4)
+  
+  # Select 'Total' columns
+  age_gender <- age_gender %>%
+    select(starts_with("Total"))
+  
+  # Rename columns to match the years (2011-2023)
+  colnames(age_gender) <- c(paste0(2011:2023))
+  
+  # Delete rows from 82 to 86 (adjust the indices if needed)
+  age_gender <- age_gender[-(82:86), ]
+  
+  # Add Age column (0 to 80)
+  age_gender$Age <- c(0:80)
+  
+  # Create age groups
+  age_gender <- age_gender %>%
+    mutate(AgeGroup = case_when(
+      Age <= 18 ~ "0-18",
+      Age >= 19 & Age <= 35 ~ "19-35",
+      Age >= 36 & Age <= 55 ~ "36-55",
+      Age >= 56 ~ "56+"
+    ))
+  
+  # Summing the values for each group by year
+  age_gender_grouped <- age_gender %>%
+    group_by(AgeGroup) %>%
+    summarise(across(everything(), sum, na.rm = TRUE))
+  
+  # Reshape the data to long format for plotting
+  age_gender_long <- age_gender_grouped %>%
+    pivot_longer(cols = starts_with("20"), names_to = "Year", values_to = "Population")
+  
+  # Assign this processed data frame to a variable with the sheet name
+  assign(sheet_name, age_gender_long, envir = .GlobalEnv)
+}
+
+# List of sheet names in the Excel file
+sheet_names <- excel_sheets("../Data/age-gender.xlsx")
+
+# Apply the function to each sheet and create individual variables
+for (sheet_name in sheet_names) {
+  process_and_assign_sheet(sheet_name)
+}
+
+Total_Armenia <- RA
+
+```
+
+
+
+
+```{r population_histogram_by_ages}
+total_armenia_grouped <- Total_Armenia %>%
+  filter(Year >= 2011 & Year <= 2023) %>%  
+  group_by(Year, AgeGroup) %>%
+  summarise(Population = sum(Population, na.rm = TRUE))
+
+
+population_histogram_by_ages <- ggplot(total_armenia_grouped, aes(x = Year, y = Population/1000)) +
+  geom_bar(stat = "identity", color = 'navy', fill = 'lightblue') +  
+  geom_line(aes(group = AgeGroup), color = "black", size = 1) +  
+  geom_point(aes(group = AgeGroup), size = 2) +
+  labs(title = "Population by Age Group in Armenia", 
+       x = "", 
+       y = "Population (in Thousands)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        plot.title = element_text(face = "bold", size = 14, hjust = 0.5)) +  
+  facet_wrap(~ AgeGroup)  
+
+```
+
+
+
+```{r saving process}
+# Saving the Marz variables
+save(Yerevan, Aragatsotn, Ararat, Armavir, Gegharkinik, Lori, Kotayk, Shirak, 
+     Syunik, VayotsDzor, Tavush, Total_Armenia, file = "../Rdata_saved/marz_data.RData")
+
+
+
+
+# Saving all other birth rate relevant variables 
+save(
+  birth_rate_plot, change_percent_plot,
+  birth_rate_plot_1, change_percent_plot_1,
+  birth_rate_plot_2,change_percent_plot_2,
+  birth_rate_plot_3, change_percent_plot_3,
+  birth_rate_plot_4, change_percent_plot_4,
+  birth_rate_plot_5, change_percent_plot_5,
+  
+  arm_az_geo_plot,
+  marriages_divorces_plot,
+  comparison_plot_2000_2023,
+  plot_of_90s,
+  population_histogram_by_ages,
+  
+  file = "../Rdata_saved/birth_rate_analysis.RData")
+```
+
+

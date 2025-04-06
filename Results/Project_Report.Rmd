@@ -1,0 +1,516 @@
+---
+output: 
+  pdf_document:
+    toc: no
+---
+
+\begin{titlepage}
+		\begin{center}
+			\vspace*{2cm}
+			
+			
+			\Huge
+			\textbf{DEMOGRAPHIC TRANSITION IN ARMENIA}\\[1.5cm]
+			
+			\Large
+        \textbf{Course: Data Visualization}\\
+        \textbf{DS116 / CS343}\\[2.5cm]
+			
+			\Large
+        \textbf{Authors:}\\
+        Edelweiss Gevorgyan\\
+        Armine Babajanyan\\
+        Levon Titanyan\\
+        
+        
+        
+			\vfill
+			
+			\Large
+			\textbf{American University of Armenia}\\
+			Yerevan, Armenia\\
+			\today
+			
+		\end{center}
+\end{titlepage}
+
+
+```{r, echo=FALSE}
+    knitr::opts_chunk$set(echo = FALSE)
+    knitr::opts_chunk$set(message = FALSE)
+    knitr::opts_chunk$set(include = TRUE)
+    knitr::opts_chunk$set(warning = FALSE)
+    knitr::opts_chunk$set(fig.width = 8,fig.height = 4)
+```
+
+
+```{r}
+library(sf)
+library(dplyr)
+library(leaflet)
+library(viridis)
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(cowplot)
+library(patchwork)
+library(dplyr)
+library(ggrepel)
+library(tidyverse)
+library(gridExtra)
+library(grid)
+library(shiny)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(RColorBrewer)
+
+
+options(scipen = 999)
+load("../Rdata_saved/migration_analysis.RData")
+load("../Rdata_saved/birth_rate_analysis.RData")
+load("../Rdata_saved/death_rate_analysis.RData")
+```
+\newpage
+
+## Abstract
+
+This project explores the demographic transition in Armenia, focusing on overall population changes, including birth rate, mortality rates, and migration patterns over time. To explore the trends in demographics, we have collected and analyzed historical data from various national and international sources. The project aims to provide a comprehensive overview of Armenian demographic trends, presenting insights into the underlying factors driving these changes in the population dynamics. The findings emphasize the role of migration in population changes and the evolving birth and death rates in Armenia.
+
+
+
+
+
+
+
+Keywords: Armenia, demographics, birth rate, death rate, population, migration, immigration, emigration, hypothesise
+\newpage
+
+## Introduction
+
+Population dynamics are a crucial aspect of understanding the socio-economic development and future prospects of any country. Population is what drives the country to future developments and what receives the results of it. Therefore, controlling the demographic changes of the country is a key to shaping its future.
+
+This paper aims to explore the three primary drivers of population change in Armenia: the birth rate, the death rate, and migration. These factors not only influence the demographic composition of the country but also play a significant role in shaping its economic, social, and political landscape. This project explores how various social, economic, and historical factors have influenced demographic trends in Armenia over recent decades. The goal of the research is to identify the main factors influencing these birth rate, death rate and migration, and therefore, shape the overall population of Armenia.
+
+
+
+
+## Methodology
+
+Birth rate analysis is based on the changes in birth rate over time. It focuses on the events that have happened in the country and tries to identify if the events have had a significant impact on the birth rate. It compares Armenia to neighboring countries with similar features while also making comparisons to more developed countries to see major differences.
+
+Death rate analysis also looks at the historical changes in the death rate and uncovers the events and factors that influence it. It makes comparisons with peer countries and drives conclusions based on that. It explores how health influences death rate while also looks at death as an unavoidable aspect in the population changes. 
+
+
+
+For the migration analysis, mainly World Bank data has been used. Other data sources include Armstat and Migration Services of Armenia. The analysis starts with an overview of migration in Armenia from 1960 to 2023 and identifying reasons for migration. Then, it proceeds to analyze the connections between economic, social and general well being factors and net migration, aiming to identify the main factor.
+
+R programming language was used for data analysis and visualization.
+
+
+
+## Literature Review
+
+Understanding demographic change is essential for analyzing the socio-economic challenges that the country is facing. To examine the trend in population changes in Armenia, we have analyzed various reports by international and local organizations. The reports included the analysis of main components of demographics, and the factors influencing them both in Armenia and abroad. During the research, we identified three main factors: birth rate, death rate and migration.
+Birth rates are influenced by the existing age-gender structure, social norms, policies, economic prosperity and poverty, education level and employment, especially among women. Death rates are mainly affected by health care and medical facilities, and, of course, economic conditions. 
+According to the European Commission (2020), several European nations, including Armenia, face challenges as their populations age and fertility rates fall. Similarly, Ahmed et al. (2016) classify Armenia as an upper-middle-income country with rapidly declining fertility, which contributes to slower population growth. Migration, particularly from rural to urban regions and abroad, is an important factor in Armenia's demographic changes. The "Armenia Trend Report" (2020) depicts growing migration to Yerevan and beyond, particularly to Russia, resulting in the loss of young working-age individuals. As a result of male migration, more women have become heads of households.
+The article “Comparing Push and Pull Factors Affecting Migration” explores the factors that make people leave a country or move to another. It mainly focuses on Poland and Romania, both of which can be compared to Armenian in some way. It talks about factors that invite or drive people out of a country, separating them in 3 different categories: economic, political and social. Later on, we have also incorporated this method in our analysis of migration.
+The article “Happiness and International Migration” explores the complex relationship between migration and subjective well-being. It states that migrants often move from less happy to happier countries, but still, social and economic factors have significant influence on migration intentions.
+
+
+\newpage
+
+
+## Analysis and Visualization
+
+
+
+
+
+
+This section provides a comprehensive analysis of the demographic trends in Armenia, with a specific focus on birth rates, death rates, and migration patterns. Through a meticulous review of data sourced from national statistical agencies, international reports, and academic studies, this exploration delves into the underlying factors that influence these demographic trends over time. By examining shifts in population growth, changes in fertility and mortality rates, and the dynamics of internal and international migration, we aim to uncover the complex interrelationships between these variables.
+
+Incorporating  data visualizations, this analysis highlights the key drivers behind demographic changes and their potential implications for Armenia’s future. The visual tools used throughout the report offer a deeper understanding of how these demographic factors interact and evolve. Furthermore, this exploration provides critical insights into the socio-economic consequences of demographic shifts, helping to inform policy decisions and strategic planning for the country’s sustainable development. Through this analysis, we aim to contribute valuable knowledge to the ongoing discourse on Armenia’s demographic future.
+
+We begin by examining the age-gender distribution of Armenia.
+
+```{r}
+population_histogram_by_ages
+```
+
+
+The graph presented here illustrates the population trends in Armenia from 2011 to 2023, segmented by four distinct age groups: 0-18, 19-35, 36-55, and 56+. A closer look at the data reveals that the younger age groups, particularly 0-18 and 19-35, have largely remained stable throughout the 12-year period. This stability, however, contrasts with the trends seen in the older age brackets. Specifically, the 36-55 group experienced slight declines in population, indicating a reduction in the number of young adults and middle-aged individuals. This decline could be attributed to factors such as migration, lower birth rates, or a shift in age distribution.
+
+The 56+ age group has steadily increased, reflecting a clear trend of population aging in Armenia. While younger age groups have shown a decline, the older population continues to grow, signaling an aging society. This shift could have significant long-term implications, particularly for the economy, healthcare systems, and social structures, as a shrinking proportion of young people may place increasing demands on resources for older generations.
+
+In summary, the graph highlights the stability in younger age groups and a clear trend of population aging in Armenia. The steady increase in the 56+ group, combined with declines in younger cohorts, indicates a society increasingly dominated by older generations. This demographic shift raises concerns about the sustainability of the current population structure and the need for policies to address the challenges of an aging population.
+
+
+```{r pyramid_2023}
+pyramid_2023
+```
+
+The population pyramid graph for Armenia in 2023 offers a comprehensive view of the age and gender distribution within the country. The back-to-back bar chart allows for an easy comparison of male and female populations across various age groups, providing insights into the demographic structure. The graph clearly illustrates that the largest population density is in the 30-50 age groups, indicating a robust working-age population. This suggests that Armenia has a strong labor force that is crucial to the country’s economic stability, with both men and women contributing significantly to this group.
+
+The younger age groups, particularly the 0-20 range, also show substantial populations, though not as large as the working-age groups. This may point to a relatively stable or slowly growing younger generation, which is important for ensuring the future workforce of the country. However, as the graph progresses into the older age groups, there is a noticeable decline in population, signaling a smaller elderly demographic. This could suggest that Armenia is facing challenges related to an aging population, which may impact healthcare, social services, and economic growth.
+
+The gender distribution within the pyramid presents interesting trends. Among the younger age groups (0-20), males consistently outnumber females, which could be linked to cultural practices such as gender-selective birth preferences. However, as we move into the mid-age and older groups, the trend reverses, with females outnumbering males. This shift is likely due to a combination of factors, including higher male mortality rates, longer female life expectancy, and the migration patterns that often result in a larger male outflow, especially in younger working-age groups.
+
+Furthermore, the graph highlights the ongoing demographic transition in Armenia. While the younger generations remain significant, the elderly population is growing, which is a common trend in many countries facing similar challenges. This underscores the importance of policies designed to address the needs of an aging population, such as improving healthcare, retirement systems, and social support. Additionally, the gender differences observed in the pyramid may also influence policy considerations, particularly in terms of addressing gender equality, improving health outcomes, and understanding the implications of migration on demographic dynamics.
+
+Overall, the population pyramid offers crucial insights into Armenia’s demographic trends, emphasizing the balance between a youthful workforce and an aging population. It calls attention to the potential implications for the country’s future development, both in terms of maintaining economic vitality and addressing the needs of a growing elderly population.
+
+\newpage
+
+# Analysis of Birth Rate in Armenia
+Here's the overall trend of birth rate with percentage change in Armenia from 1950 to 2023.
+```{r birth_rate_plot}
+grid.arrange(birth_rate_plot,change_percent_plot, ncol = 1)
+
+```
+
+```{r arm_az_geo_plot}
+arm_az_geo_plot
+```
+This graph presents the birth rates in the Southern Caucasus region, encompassing Armenia, Georgia, and
+Azerbaijan, from 1950 to 2023. It highlights the similar patterns observed across the three countries, with
+Azerbaijan consistently exhibiting higher birth rates compared to Armenia.
+
+As we can see during the postwar period, birth rates in Armenia and other Soviet republics were increasing
+as part of a broader effort to stabilize the population. We hypothesize that this trend was further accelerated
+by pro-natalist policies introduced during this era. Research on Soviet family policies, such as those detailed
+in Family in the SSSR and reports by the Economic and Social Research Council, highlight how measures
+like the restoration of maternity leave in 1955 played a crucial role. Maternity leave was extended to 56 days
+before and up to 70 days after childbirth, with benefits covering two-thirds of wages and offered to a broader
+range of families. These policies were part of the Soviet strategy to promote demographic recovery and population growth following the war, addressing postwar challenges.
+
+
+
+
+```{r birth_rate_plot_1}
+# Adding 1950-1960 years
+grid.arrange(birth_rate_plot_1, change_percent_plot_1,ncol = 1, heights = c(1, 1))  
+```
+
+
+The graph of Birth Rate and Its Change in Armenia until up to 60s provides a clear illustration of the fluctuations in Armenia’s birth rates over a span of more than seven decades. It highlights key periods of demographic change and shows the influence of social policies on birth rates. The data indicates a significant increase in birth rates during the postwar era, reflecting the success of pro-natalist policies aimed at stabilizing and boosting the population. These policies were designed to encourage family growth and recovery in the aftermath of the war, successfully contributing to population expansion.
+
+The graph also marks the introduction of maternity leave benefits in 1955, a pivotal moment in Armenia’s demographic history. However, despite the positive shift in birth rates following this policy change, it is evident from the data that the increase in birth rates during this time was largely part of a broader trend, influenced by economic recovery efforts and societal stabilization, rather than by the maternity leave policy alone. While these pro-family benefits may have provided support for individual families, they were not the sole contributors to the population boom.
+
+Notably, the birth rate growth begins to stabilize in the 1970s and 1980s, with fluctuations influenced by broader socio-economic factors and the introduction of further demographic policies. In the early 1960s, the Soviet Union made significant adjustments by liberalizing divorce laws, making it easier for couples to dissolve marriages. These changes were part of efforts to manage the evolving family structures during this period, which reflected an attempt to maintain social order. However, by 1968, restrictions on divorce were implemented, which coincided with the Soviet Union’s demographic crisis. This crisis, characterized by fertility rates dropping below replacement levels, prompted measures aimed at stabilizing family structures and reversing the demographic decline.
+
+Additionally, the Soviet Union introduced expanded social benefits aimed at families with disabled children, highlighting a shift in policy toward supporting vulnerable groups and stabilizing the population. This period reflects a deliberate attempt to address the demographic crisis by encouraging larger families and stabilizing fertility rates. The restrictions on divorce and the expansion of family support services are believed to have played a crucial role in the stabilization of birth rates during the later stages of the 20th century. In summary, while the 1955 maternity leave policy had a significant impact, it was the broader set of pro-natalist and social policies, including the restrictions on divorce, that played a central role in stabilizing Armenia’s birth rate. 
+
+\newpage
+
+```{r birth_rate_plot_2}
+# Adding 1960-1969 years
+grid.arrange(
+  birth_rate_plot_2,
+  change_percent_plot_2,
+  ncol = 1,
+  heights = c(1, 1))  
+```
+
+With the introduction of restrictions on divorce in 1968, we can see a stabilization in the birth rate, supporting the hypothesis that these policies contributed to slowing down the decline in fertility rates. Despite this stabilization, the birth rate did not rise significantly, indicating that while the divorce restrictions had some mitigating effect, they were not enough to fully reverse the broader demographic trends.
+
+
+
+
+
+
+The data, taken from 'USSR and other word countries', shows the trends in marriage and divorce rates in the USSR, USA, and Japan from the 1950s to the 1980s. These countries experienced similar economic and health-related challenges, yet their responses and the effects on marriage and divorce rates differed.
+The graph highlights that, despite the 1968 restrictions on divorce in the USSR, there was little noticeable impact on divorce rates. However, marriage rates in the USSR began to show a gradual increase following the 1968 law, signaling a shift in family dynamics during this period. This suggests that while the divorce restriction law had limited effect on reducing divorce rates, it may have influenced an uptick in marriages during the late 1960s and early 1970s.
+
+
+
+```{r marriages_data_plot}
+# Plot of Marriages and Divorces rate in USSR, USA and Japan
+marriages_divorces_plot
+```
+
+\newpage
+In 1969 The Code of Laws on Marriage and Family Life was introduced, aiming to promote gender equality within families, improve family stability, and provide greater protection for vulnerable spouses, marking a shift toward prioritizing family welfare.
+
+In 1974, the Soviet Union implemented new family support policies to address declining birth rates and support vulnerable populations. Monthly child allowances were introduced for families with per capita incomes below 50 rubles (75 rubles in the Extreme North and Far East regions), providing 12 rubles per child under the age of 8. These measures aimed to alleviate poverty and stimulate fertility, though their primary impact was on improving the living conditions of lower-income families.
+
+The momentum continued in 1975 when the United Nations designated it as International Women’s Year, prompting a global focus on ending discrimination against women. The USSR responded by emphasizing the role of women in society and further advocating for policies that improved conditions for women balancing work, motherhood, and household responsibilities. These combined efforts reflected a broader shift towards fostering gender equality and stabilizing demographic trends.
+
+
+
+
+During the 1960s and 1970s, a series of social reforms were implemented in the Soviet Union to address declining birth rates and promote family welfare. The 1969 Code of Laws on Marriage and Family Life, which aimed to promote gender equality and family stability, coincided with the early decline in fertility rates. Additionally, the 1974 family support policies, which provided financial support to lower-income families, aimed to incentivize childbirth by improving living conditions. Based on these policies, we hypothesize that these social reforms had a significant impact on stabilizing birth rates and improving family welfare in Armenia.
+
+
+
+```{r birth_rate_plot_3}
+# adding 1969-1987 years
+grid.arrange(
+  birth_rate_plot_3,
+  change_percent_plot_3,
+  ncol = 1,
+  heights = c(1, 1))
+```
+
+
+We can conclude that the introduction of the 1969 marriage equality reforms had a limited effect on birth rates in Armenia, with little noticeable change in the demographic trends. However, following the implementation of the 1974 family support policies aimed at assisting low-income families, birth rates began to stabilize and even showed a slight increase. This marked the first time in 20 years that birth rates had increased, signaling a positive shift in demographic trends due to the social reforms introduced during this period.
+It is also worth mentioning that 1975 was designated as International Women’s Year by the United Nations, a global movement that emphasized gender equality. During this period, the USSR also focused on improving conditions for women balancing work, motherhood, and household responsibilities, contributing to a broader shift toward gender equality and supporting demographic stability.
+
+
+
+\newpage
+The period between 1985 and 2000 was one of profound change for Armenia, shaped by a series of significant events that had lasting impacts on the country’s socio-political and economic landscape. These events disrupted daily life, strained resources, and triggered large-scale migration. Given the severity of these disruptions, we hypothesize that these events had a negative impact on Armenia’s birth rate during this period, potentially leading to a decline in birth rates and shifts in family structures as a result of economic hardship, displacement, and social instability.
+
+
+```{r birth_rate_plot_of_90s}
+# Plot of Birth rate in 90's (1985-2000 is shown for broader range and better understanding)
+plot_of_90s
+```
+
+
+The 1988 Spitak Earthquake, followed by the Artsakh War from 1988 to 1994, and the  collapse of the Soviet Union during the war (1991 year), led to a significant decline in Armenia’s birth rate. From 1985, the birth rate dropped from 24.1 to 13.5 by 2000, reflecting the socio-economic disruptions caused by these events. The initial impact of the earthquake and the ongoing war resulted in a sharp decline in the birth rate. Following the end of the Artsakh War, the birth rate began to stabilize, showing signs of recovery in the late 1990s, though it remained below the pre-crisis levels. This trend highlights the profound influence of these major events on Armenia’s demographic patterns during this period.
+
+
+```{r birth_rate_plot_4}
+# Combine the plots for 1988-2000
+grid.arrange(
+  birth_rate_plot_4,
+  change_percent_plot_4,
+  ncol = 1,
+  heights = c(1, 1))
+```
+
+
+
+\newpage
+During the 2008 global economic crisis, financial instability and uncertainty were felt across many countries, and it is hypothesized that these factors significantly influenced birth rates. The crisis led to reduced economic opportunities, job insecurity, and financial stress for families, likely resulting in delayed or reduced childbearing. Similarly, the COVID-19 pandemic in 2020, with its health crises, lockdowns, and economic disruptions, is expected to have had a major effect on birth rates. This would have been driven by increased uncertainty about the future, job losses, and shifts in social and healthcare priorities.
+
+```{r comparison_plot_2000_2023}
+comparison_plot_2000_2023
+```
+
+
+The analysis indicates that while the 2008 economic crisis had a significant and immediate impact on birth rates, leading to a sharp slow down in growth in Armenia, France and Italy, whereas in Germany it had opposite impact: While having negative trend in birth rate, after 2008, it stabilized. The COVID-19 pandemic of 2020 had  no effect on birth rates in 4 countries in this short-term data. This suggests that economic crises tend to have a more immediate and noticeable influence on demographic trends, while health-related crises like the pandemic may affect birth rates in more complex ways or over a longer duration.
+
+```{r birth_rate_plot_5}
+grid.arrange(
+  birth_rate_plot_5,
+  change_percent_plot_5,
+  ncol = 1,
+  heights = c(1, 1)
+)
+```
+
+\newpage
+# Analysis of Death Rate in Armenia
+
+In this section, we will conduct a comprehensive analysis of the death rate trends in Armenia and examine the key factors that have shaped these changes over the decades. By reviewing historical data and relevant scholarly literature, we will explore how various socio-economic, political, and healthcare developments have influenced mortality patterns in Armenia. This includes analyzing the effects of key historical events, such as periods of economic instability, war, and the evolution of public health policies. Furthermore, we will consider the role of healthcare advancements, disease control measures, and overall improvements in living conditions. Through this multifaceted approach, our goal is to identify significant turning points in Armenia’s mortality trends and understand the broader societal and structural shifts that have impacted public health. This analysis will provide valuable insights into the forces that have shaped population health, offering critical guidance for policymakers aiming to address current and future public health challenges and improve the health outcomes for the population of Armenia.
+\par\bigskip
+
+
+```{r death_rate_plot, warning=FALSE}
+grid.arrange(death_rate_plot, death_annual_change_plot, ncol = 1)
+```
+\par\bigskip
+\par\bigskip
+The graph depicts the trends in Armenia’s death rate from 1950 to 2024, revealing significant changes over this period. Between 1950 and 1975, the death rate steadily decreased, which can be attributed to major improvements in public health infrastructure, continuous advancements in medical technology, better access to healthcare services, and overall improvements in living standards. During this time, Armenia saw a broad improvement in the general health of its population, contributing to lower mortality rates. From 1975 to 1990, the death rate remained relatively stable, suggesting that the period was marked by socio-economic stability and a balance between healthcare improvements and other demographic factors. However, in 1990, there was a noticeable spike in the death rate, primarily due to the devastating impact of the First Artsakh War, which led to significant disruption in healthcare services, widespread trauma, and loss of life. Following this period, the declining trend in the death rate shifted, and the data shows a gradual increase in the death rate, signaling the longer-term effects of the war and economic challenges faced by the country in the post-Soviet era. This shift emphasizes the influence of conflict, economic difficulties, and healthcare system limitations on Armenia’s mortality patterns.
+
+\newpage 
+
+
+```{r}
+death_rate_plot_events
+```
+
+
+From 1950 to 1975, Armenia experienced a steady decline in its death rate, primarily due to advancements in healthcare and significant public health measures during the Soviet era. A cornerstone of this progress was the widespread implementation of vaccination campaigns, which drastically reduced mortality from infectious diseases such as polio, tuberculosis, and measles. These campaigns, supported by centralized Soviet healthcare policies, ensured high immunization coverage across the population, creating robust herd immunity. Alongside vaccinations, improvements in access to medical services, sanitation, and nutrition further enhanced public health outcomes. Economic stability during this period also played a role in supporting these initiatives, leading to a consistent reduction in death rates and increased life expectancy.
+
+
+Between 1975 and 2000, Armenia's death rate began to rise, driven by a combination of socio-political and economic challenges. The late 1970s marked the start of stagnation in the Soviet Union, leading to reduced investment in healthcare infrastructure and a decline in public health services. This was compounded by the devastating Spitak earthquake in 1988, which claimed over 25,000 lives and severely strained the country’s healthcare system. Following the collapse of the Soviet Union in 1991, Armenia faced a period of economic turmoil, with hyperinflation, widespread poverty, and a breakdown of social services. The protracted Nagorno-Karabakh conflict (1988–1994) further exacerbated the situation, contributing to casualties, displacement, and limited access to medical care. During this time, rising mortality from chronic conditions such as cardiovascular diseases, worsened by inadequate healthcare resources and deteriorating living conditions, became a significant factor in the increasing death rate.
+
+
+The collapse of the Soviet Union in 1991 marked a turning point for Armenia, leading to a sharp increase in its death rates. This rise in mortality was largely driven by widespread economic instability, which disrupted the country’s industrial and agricultural output, leading to poverty and hardship. Alongside the economic downturn, the breakdown of the centralized healthcare system further compounded the situation, leaving many citizens without access to adequate medical care. The decline in living conditions, exacerbated by rising unemployment and social unrest, significantly contributed to the deterioration of public health and an overall increase in mortality during this period.
+
+
+\newpage
+The following compares death rates across the South Caucasus countries - Armenia, Georgia and Azerbaijan. We can observe that initially Armenia had a lower death rate compared to that of its neighbouring countries, highlighting a better demographic conditions. In 1970, Armenia achieved the lowest death rates in the region, while the other two countries still remained higher. Despite the increase in death rates started from 1980s, Armenia's death rate remains consistently lower. While Georgia's rate peaked significantly after this period, Armenia maintained a steady trajectory, avoiding sharp increases. 
+
+```{r}
+death_rate_caucasus_plot
+```
+
+
+
+
+
+
+
+Armenia has seen a significant rise in cardiovascular disease (CVD)-related deaths, especially in the post-Soviet era, due to high prevalence of risk factors like smoking, alcohol use, poor diet, and physical inactivity, combined with limited healthcare access and preventive measures.
+
+```{r death_causes_plot}
+death_causes_plot
+```
+
+The bar chart shows the main causes of death in Armenia from 2016 to 2022, per 100,000 people. Cardiovascular diseases are the leading cause, followed by cancer. Chronic respiratory diseases and diabetes contribute a smaller, stable share of deaths.
+
+
+
+\newpage
+Hypothesis: Higher healthcare spending per capita leads to decrease in the death rate, as better funding should improve healthcare outcomes.
+
+```{r health_death_plot}
+health_death_plot
+```
+The scatter plot above shows a positive correlation between healthcare spending per capita and death rates in Armenia, which contrasts with the typical expectation that higher spending reduces mortality. This could be due to Armenia’s aging population, leading to greater healthcare needs, as well as rising healthcare costs, including inflation and expensive medical technologies, which may increase spending without improving health outcomes.
+
+Analyzing the overall mortality rate offers key insights into public health, highlighting the impact of disease, lifestyle, and healthcare access. It provides context for understanding how broader health factors affect vulnerable groups, such as infants, before focusing on specific mortality types like infant mortality.
+
+```{r IMR_plot}
+grid.arrange(plot_IMR_change, plot_IMR_pc, ncol = 1)
+
+```
+
+The graph shows a long-term decline in infant mortality in Armenia, driven by Soviet-era healthcare investments. After a temporary slowdown due to post-Soviet economic and political instability, IMR declined again from the 2000s, supported by healthcare recovery, economic reforms, and international aid.
+
+
+\newpage
+
+# Analysis of Migration Patterns
+
+
+
+Migration has been a defining feature of Armenia’s history, influenced by its geopolitical position, economic conditions, and socio-political developments. The patterns of migration in Armenia are deeply intertwined with its history, and are uncovering the changes the country has experienced over time. 
+
+In this section we are exploring the historical development of migration in Armenia, and uncovering the underlying patterns and reasons for them. The aim of the research is to identify the main factors affecting migration in Armenia. The findings will be useful in the sense of predicting and controlling the future inflows and outflows of population. 
+
+With the research we want to check the hypothesis if improvements in overall quality of life in Armenia are positively correlated with net migration, as individuals are more likely to move to areas with better living standards and opportunities.
+
+Starting with the historical development of migration of Armenia, it is important to have a glance on the overall pattern for the previous 60 years. This uncovers the main direction the country has been moving and gives a general understanding of the main events that have been affecting the migration.
+
+
+```{r migration_plot}
+migration_plot
+```
+
+
+The line chart above summarizes net migration in Armenia starting from 1960 till 2023. It is clearly divided into three main sections: Soviet times, transitional period and independence era. Having a positive net migration until 1978 uncovers that Soviet times have been favorable for life in Armenia and immigration into the country has been bigger than emigration. One of the reasons for that might be the inflow of Armenians from Syria and Lebanon in the 60s. The metric became negative around 1978 when Armenians starting immigrating to the USA as Soviet borders became more permissive. 
+
+The period of transition to an independent country has shaken all the spheres of the country and migration is not an exception. The "shake" caused by the political situation is evident from the graph. With the start of Independence movement in 1988, massive inflow of population to fatherland resulted in high value of net migration. In just 3 years the emigration from the country has reached its historical low of 200,000 as a result of a extremely tough economic situation and a severe war going on in Artsakh. After the end of the war, net migration has increased since less people where leaving the country as well as a lot of people relocated to Armenia fro Artsakh. But still, the net migration value has never become positive, meaning that during the whole period of independent Armenia more people are leaving the country than entering it.
+
+The stabilization of the political and economical situation after the year 2000, has lead to a more stable value of net migration over the time. The start of COVID-19 in 2020 has had large impact on emigration and has decreased it significantly, mainly because the people could not leave the country. Moreover, as a result of Artsakh Second War, many people from Artsakh emigrated to Armenia, increasing the net migration. Another rapid increase in net migration is observed in 2022, when the Russian-Ukrainian conflict has started. Due to very large immigration from Russia to Armenia, the net migration has increased, but still remained negative, meaning that emigration has been still larger.
+
+Overall, the graph highlights how major events in the political and economical areas shake the migration image and affect the population change.
+
+\par\bigskip
+
+To analyze the net migration for the recent years it is important to look onto the yearly border crossings of Armenia. While it does not give an exact picture of migration, it uncovers trends that might lead to migation changes in the future.
+
+```{r border_plot}
+border_plot
+```
+
+The chart summarizes the number of arrivals and departures in Armenia, providing insights into migration trends over the years. The net column, which calculates the difference between arrivals and departures, reveals some interesting patterns. In 2019, the number of people leaving Armenia exceeded those arriving, leading to a negative net value. However, in 2020, the situation shifted, and the net value became positive, although the increase in arrivals compared to departures was relatively small. This positive change, while not indicating a substantial influx of people, suggests a subtle shift in migration trends. The data highlights a period of stability in Armenia’s migration patterns, with no sharp increases or decreases in population movement. This could imply that Armenia is experiencing a steady flow of migration with no significant external or internal pressures influencing the migration dynamics in recent years, contributing to a sense of balance and stability in the country’s demographic landscape.
+
+\newpage
+
+
+To identify any major differences between Armenian and Non-Armenian citizens entering and leaving Armenia we have looked into the arrivals and departures each year for both Armenian and Foreign citizens.
+
+```{r border_arm_for_plot}
+border_arm_for_plot
+```
+
+The graph shows that in ther period 2016-2021, the proportion of arrivals and departures have been approximately the same for both Armenian and foreign citizens. This means that there is no year where Armenian citizens massively left the country making the proportion of departures higher and there is no year when foreign citizens massively entered the country making the proportion of arrivals higher. So, the picture is more or less stable. Still, the graph shows that Armenian citizens cross the borders more often than foreign citizen which indicates that movements of Armenians across the borders dominate in the country and therefore, Armenian citizens affect the migration statistics more than foreigners. 
+
+\newpage
+
+Each time people enter a new country or leave it, they are driven by some set of reasons. As the goal of the research is to identify the key factors affecting population change and in this case migration, it is important to be familiar with the reasons that drive people across countries.
+
+For this purpose, we have looked into the main reason people immigrated to Armenia and emigrated out of Armenia in 2017.
+
+```{r reasons_imm_em}
+grid.arrange(reasons_imm, reasons_em, heights = c(1.35, 1))
+```
+
+The main reasons driving people to either move to or leave Armenia are primarily related to work opportunities. Seasonal work emerges as the dominant factor influencing migration, followed by non-seasonal work, typically lasting up to one year. This pattern highlights the significant role that employment prospects play in shaping migration trends, both into and out of the country. A notable insight from the data is the disparity between people leaving Armenia for permanent residence and those arriving for the same reason. A large proportion of individuals are leaving Armenia permanently, while very few are coming to the country with the intention of staying permanently. This trend prompts an important question: What factors are motivating people to leave Armenia permanently, and how can we address them?
+
+Our goal is to identify the underlying reasons behind this trend and understand the key factors influencing individuals’ decisions to migrate permanently. By examining each factor in detail, we aim to uncover the primary drivers of out-migration from Armenia. Drawing from existing literature, we will focus on the factors that are most commonly identified as influencing migration and test their relevance in the context of Armenia. We have defined three main types of factors that might affect migration: economic, general well-being, and social. Analyzing these factors individually will provide a comprehensive understanding of what influences migration decisions and help to shed light on the larger issue of Armenia’s migration patterns. By investigating the applicability of these factors to Armenia, we can gain valuable insights into the challenges that may be driving people to seek permanent residence elsewhere.
+
+\newpage
+
+
+As suggested by initial graph on overall historical migration in Armenia, the economy has a high influence on migration levels. As the main economic indicator we have chosen GDP per Capita calculated based on People Purchasing Power. Another economic factor we take into account is the unemployment rate, since as shown previously, work is the main reason people decide to relocate. With the analysis, we aim to test the hypothesis that higher GDP per Capita  and lower unemployment rate result in higher net migration, as a result of making the country more favourable place to live.
+
+```{r gdp_unemployment}
+grid.arrange(gdp_plot, unemp_plot)
+```
+
+As the graphs suggest, there is a positive correlation between GDP per Capita and net migration, while there is also not very strong but negative correlation between unemployment rate and net migration. Therefore, the hypothesis can be accepted.
+
+
+
+The literature defines that general well-being is also an important factor, which is why we are also looking into the correlation between happiness index and net migration. We want to test if higher happiness index means bigger net migration.
+
+```{r happiness_plot}
+happiness_plot
+```
+
+While the data points are too scarce to make strong conclusions, still there is some correlation, so there is no evidence to reject the null hypothesis. Therefore, we can claim that there is a positive correlation between happiness index and net migration to some extent. This means that the happiness in a country (specifically Armenia) supports the decision on not to leave the country.
+
+
+
+
+Coming to the social reasons, it is important to mention medical care. To analyze the factor we looked at the correlation of health expenditure as a percentage of GDP and net migration. Another important social factor is education, therefore education expenditure as a percentage of GDP vs net migration is also explored. So, the nex hypothesis is if higher expenditures on social aspects like healthcare and education have positive correlation with net migration.
+
+```{r health_education}
+grid.arrange(health_plot, edu_plot)
+```
+
+While in case of health expenditure the correlation is evident, education expenditure does not show any valuable results, since all the points are gathered in the same area and do not show any direction. Therefore while health expenditure can be considered an influencing factor on net migration, education has no connection to that.
+
+So, the analysis identifies that economic factors are the ones that have the most significant influence on migration in Armenia.The correlation can be seen in almost all of the cases, so the initial hypothesis on higher qualitiy of life results in increased migration is proved. While most of the factors show some kind of correlation and might actually have their impact on migration, there is an important aspect that should not be neglected. If we look at the time colors of the points we can see that most of the factors increase over time (except unemployment rate which decreases over time). We also saw that net migration also increases over time in recent years. Therefore, it is hard to define if the two factors are actually connected or both are increasing as the time goes as a result of country's development. We still believe that there is some significant correlation but we cannot conclude anything about causation.
+
+
+
+\newpage
+
+## Conclusion
+
+In conclusion, this project comprehensively examined the demographic transition in Armenia, analyzing key factors such as birth rate, death rate, and migration patterns. Through the use of historical data and advanced visualizations, we identified significant trends and correlations that illustrate how these demographic factors have evolved over time.
+
+The analysis revealed that Armenia’s demographic shifts are heavily influenced by socio-economic events, such as the collapse of the Soviet Union, the Artsakh Wars, and global economic crises. Birth rates have been declining, especially after the 1990s, largely due to the socio-political upheavals and the impact of economic instability. Meanwhile, the death rate trends highlighted the challenges posed by chronic diseases and insufficient healthcare infrastructure, which further exacerbated mortality rates in the post-Soviet period.
+
+Migration, on the other hand, has been shaped by both economic opportunities and geopolitical factors, with Armenia experiencing high rates of emigration, particularly during periods of instability. The analysis suggested a strong positive correlation between net migration and economic factors like GDP per capita and unemployment rates, while social factors like healthcare expenditure also appeared to influence migration patterns.
+
+In sum, the findings of this project underscore the complex interplay of political, economic, and social factors in shaping the demographic landscape of Armenia. Further research could focus on causal relationships and explore the long-term implications of these trends on the country’s future population dynamics.
+
+
+
+\newpage
+
+## References
+
+Bakshi, D. (n.d.). Factors affecting population. Retrieved from https://dineshbakshi.com
+DHS Program. (1996). 
+\par\bigskip
+Sampling manual. Retrieved from https://dhsprogram.com
+\par\bigskip
+World Bank. (2012). Armenia: Demographic change – Implications for social policy and poverty. Retrieved from https://documents1.worldbank.org
+\par\bigskip
+Bartram, D. (2011). Happiness and international migration. 
+\par\bigskip
+Retrieved from https://www.researchgate.net
+\par\bigskip
+Koutroumpis, P., & Sofianopoulou, E. (2022). 
+\par\bigskip
+Comparing push and pull factors affecting migration. Retrieved from https://www.researchgate.net
+\par\bigskip
+Özden, Ç., Parsons, C. R., Schiff, M., & Walmsley, T. L. (2016). Global bilateral migration database: Technical report. Retrieved from https://documents1.worldbank.org
+Central Bank of Armenia. (2008). Financial stability report. Retrieved from https://www.cba.am
+
+
+
+
+
